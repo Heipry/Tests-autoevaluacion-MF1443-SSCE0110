@@ -99,6 +99,11 @@
         .hidden {
             display: none;
         }
+        #return-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
     </style>
 </head>
 <body class="bg-gray-100 p-8 flex items-center justify-center min-h-screen">
@@ -110,7 +115,7 @@
             <button id="next-btn" class="button button-primary">Siguiente</button>
         </div>
     </div>
-
+<a id="return-btn" class="button button-primary " href="index.html">Volver a inicio</a>
     <script>
         // Array de objetos con las preguntas, opciones, respuesta correcta y justificación.
         const questions = [
