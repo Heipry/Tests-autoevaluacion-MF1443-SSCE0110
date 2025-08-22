@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test MF1443</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .question-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #111827;
+        }
+        .option {
+            background-color: #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        .option:hover:not(.correct):not(.incorrect) {
+            background-color: #d1d5db;
+            transform: translateY(-2px);
+        }
+        .option.correct {
+            background-color: #dcfce7;
+            border: 2px solid #22c55e;
+            pointer-events: none;
+        }
+        .option.incorrect {
+            background-color: #fee2e2;
+            border: 2px solid #ef4444;
+            pointer-events: none;
+        }
+        .explanation {
+            background-color: #f9fafb;
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 0.5rem;
+            display: none;
+        }
+        .explanation.visible {
+            display: block;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+        }
+        .button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .button-primary {
+            background-color: #3b82f6;
+            color: #ffffff;
+        }
+        .button-primary:hover {
+            background-color: #2563eb;
+        }
+        .button-secondary {
+            background-color: #e5e7eb;
+            color: #1f2937;
+        }
+        .button-secondary:hover {
+            background-color: #d1d5db;
+        }
+        .disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8 flex items-center justify-center min-h-screen">
+    <div class="container bg-white rounded-xl shadow-lg p-6 md:p-10">
+        <h1 class="text-3xl font-bold text-center mb-6">Test de Evaluación MF1443 - Autoevaluación  4</h1>
+        <div id="quiz-container"></div>
+        <div class="nav-buttons flex justify-between mt-6">
+            <button id="prev-btn" class="button button-secondary disabled">Anterior</button>
+            <button id="next-btn" class="button button-primary">Siguiente</button>
+                        <!-- Nuevo botón para reiniciar el test -->
+            <button id="restart-btn" class="button button-primary hidden">Volver a empezar</button>
+        </div>
+    </div>
+
+    <script>
+        // Array de objetos con las preguntas, opciones, respuesta correcta y justificación.
+        const questions = [
+            {
+                question: 'Es el protocolo de trasferencia de ficheros y un software que permite a los usuarios trasferir ficheros entre ordenadores en una red de ordenadores:',
+                options: [
+                    'a) Cloud Computing.',
+                    'b) HTTP.',
+                    'c) DNS.',
+                    'd) FTP.'
+                ],
+                correctAnswer: 'd) FTP.',
+                justification: 'La FTP (File Transfer Protocol ) es el protocolo de trasferencia de ficheros y un software que permite a los usuarios trasferir ficheros entre ordenadores en una red de ordenadores.'
+            },
+            {
+                question: 'Entre los servicios más habituales que podemos encontrar en Internet no se encuentran:',
+                options: [
+                    'a) Los foros.',
+                    'b) Las wikis.',
+                    'c) Portafolios electrónicos.',
+                    'd) Los blogs.'
+                ],
+                correctAnswer: 'c) Portafolios electrónicos.',
+                justification: 'Los servicios más habituales que podemos encontrar en Internet son páginas web, correo electrónico, mensajería instantánea, videoconferencia, foros, blogs, wikis y alojamientos multimedia (Cloud Computing).'
+            },
+            {
+                question: '¿Cuál es la utilidad del port-folio en formación?:',
+                options: [
+                    'a) Resolución de problemas.',
+                    'b) Crear materiales didácticos interactivos.',
+                    'c) Almacenamiento inteligente de trabajos académicos y profesionales.',
+                    'd) Ninguna es correcta.'
+                ],
+                correctAnswer: 'c) Almacenamiento inteligente de trabajos académicos y profesionales.',
+                justification: 'La utilidad que le podemos dar al port-folio en formación se resume en lo siguiente: Almacenamiento inteligente de trabajos académicos y profesionales. Evaluación de contenidos y aportación de evidencias. Interaccción entre quien lo publica y otras personas dependiendo del hacer profesional.'
+            },
+            {
+                question: 'Señala el enunciado incorrecto:',
+                options: [
+                    'a) Un podcast es un archivo de sonido o vídeo que se distribuye mediante un sistema de sindicación.',
+                    'b) Los podcast permiten a las personas cambiar, incorporar o eliminar información.',
+                    'c) Para crear un podcast, necesitamos un programa de edición de sonido.',
+                    'd) Un podcast se puede escuchar cuando se desee en un reproductor portátil.'
+                ],
+                correctAnswer: 'b) Los podcast permiten a las personas cambiar, incorporar o eliminar información.',
+                justification: 'Las podcast no permiten a las personas cambiar, incorporar o eliminar información sin tener que manejar un lenguaje de programación. La herramienta que permite hacer eso es la wiki.'
+            },
+            {
+                question: '¿Qué criterios cumplen las herramientas de la web 2.0?:',
+                options: [
+                    'a) Usuarios y contenidos se pueden interconectar ente sí.',
+                    'b) Los usuarios son los principales generadores de contenido.',
+                    'c) Su diseño es sencillo y práctico.',
+                    'd) Todas son correctas.'
+                ],
+                correctAnswer: 'd) Todas son correctas.',
+                justification: 'Los criterios que cumplen las herramientas de la web 2.0 son los siguientes: Los datos se insertan y extraen fácilmente. Los usuarios son los principales generadores de contenido. Usuarios y contenidos se pueden interconectar ente sí. Su diseño es sencillo y práctico.'
+            },
+            {
+                question: 'Siendo tutor/a de un curso titulado "El proceso de evaluación de riesgos laborales" deseo facilitar el comentario crítico sobre un artículo adicional, la herramienta más adecuada sería:',
+                options: [
+                    'a) El foro.',
+                    'b) El WiKi.',
+                    'c) Diseñar una actividad.',
+                    'd) Mantener el contacto por mensajería interna.'
+                ],
+                correctAnswer: 'a) El foro.',
+                justification: 'Los foros son discusiones en línea que, por lo general, aparecen como complemento a un sitio web, invitando a los usuarios/as a discutir o compartir información relevante sobre la temática del sitio, en discusión libre e informal, con lo cual se llega a formar una comunidad en torno a un interés común.'
+            },
+            {
+                question: 'El freeware:',
+                options: [
+                    'a) Se usa comúnmente para programas que permiten la redistribución pero no la modificación.',
+                    'b) Está desarrollado por una empresa que gana dinero con su uso.',
+                    'c) Se trata de software con autorización de redistribución de copias, pero debemos pagar cargo por licencia de uso continuado.',
+                    'd) Ninguna es correcta.'
+                ],
+                correctAnswer: 'a) Se usa comúnmente para programas que permiten la redistribución pero no la modificación.',
+                justification: 'Al descargar una aplicación para darle uso didáctico con nuestro alumnado, debemos observar también los diferentes tipos de licencia que tiene cada herramienta. El freeware se usa comúnmente para programas que permiten la redistribución pero no la modificación.'
+            },
+            {
+                question: 'Los repositorios:',
+                options: [
+                    'a) Pueden ser de acceso público, o estar protegidos y necesitar de una autentificación previa.',
+                    'b) Están preparados para distribuirse, habitualmente, sirviéndose de una red informática como Internet.',
+                    'c) Disponen de sus propios motores de búsqueda y facilidades de actualización.',
+                    'd) Todas son correctas.'
+                ],
+                correctAnswer: 'd) Todas son correctas.',
+                justification: 'Los repositorios están preparados para distribuirse, habitualmente, sirviéndose de una red informática como Internet o en un medio físico como un disco compacto. Pueden ser de acceso público, o estar protegidos y necesitar de una autentificación previa. Estos sitios disponen de sus propios motores de búsqueda y facilidades de actualización.'
+            },
+            {
+                question: 'Flickr es un repositorio de:',
+                options: [
+                    'a) Vídeo.',
+                    'b) Archivo.',
+                    'c) Imágenes.',
+                    'd) Registros.'
+                ],
+                correctAnswer: 'c) Imágenes.',
+                justification: 'Los repositorios de imagen son servidores para almacenar las imágenes que usamos en un proyecto y que después vinculamos desde nuestras páginas. Un ejemplo de repositorio de imagen es Flickr.'
+            },
+            {
+                question: 'El software con copyleft:',
+                options: [
+                    'a) Es aquel que no está protegido con copyright.',
+                    'b) Se trata de software libre cuyos términos de distribución no permiten a los redistribuidores agregar ninguna restricción adicional cuando lo redistribuyen o modifican.',
+                    'c) Es aquel que no es libre, pero viene con autorización de uso, copia, distribución y modificación para particulares sin fines de lucro.',
+                    'd) Es aquel cuyo uso, redistribución o modificación están prohibidos o necesitan una autorización.'
+                ],
+                correctAnswer: 'b) Se trata de software libre cuyos términos de distribución no permiten a los redistribuidores agregar ninguna restricción adicional cuando lo redistribuyen o modifican.',
+                justification: 'El software con copyleft se trata de software libre cuyos términos de distribución no permiten a los redistribuidores agregar ninguna restricción adicional cuando lo redistribuyen o modifican. Es decir, la versión modificada debe ser también libre.'
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let correctAnswers = 0;
+        let incorrectAnswers = 0;
+        let answeredQuestions = new Set();
+        const quizContainer = document.getElementById('quiz-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const restartBtn = document.getElementById('restart-btn');
+
+        // Función para renderizar la pregunta actual.
+        function renderQuestion() {
+            // Limpiar el contenedor del quiz.
+            quizContainer.innerHTML = '';
+            
+            // Si hemos llegado al final del test, mostramos los resultados.
+            if (currentQuestionIndex >= questions.length) {
+                showResults();
+                return;
+            }
+
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            // Crear la tarjeta de la pregunta.
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            // Título de la pregunta.
+            const questionTitle = document.createElement('div');
+            questionTitle.className = 'question-title';
+            questionTitle.textContent = `${currentQuestionIndex + 1}) ${currentQuestion.question}`;
+            card.appendChild(questionTitle);
+            
+            // Opciones de respuesta.
+            currentQuestion.options.forEach(optionText => {
+                const option = document.createElement('div');
+                option.className = 'option';
+                option.textContent = optionText;
+                
+                // Si la pregunta ya fue respondida, deshabilitar clics y mostrar la justificación.
+                if (answeredQuestions.has(currentQuestionIndex)) {
+                    option.style.pointerEvents = 'none';
+                    if (optionText === currentQuestion.correctAnswer) {
+                        option.classList.add('correct');
+                    }
+                    if (optionText !== currentQuestion.correctAnswer) {
+                        option.classList.add('incorrect');
+                    }
+                } else {
+                    option.addEventListener('click', () => handleOptionClick(option, optionText, currentQuestion.correctAnswer));
+                }
+                card.appendChild(option);
+            });
+            
+            // Justificación de la respuesta.
+            const justification = document.createElement('div');
+            justification.className = 'explanation';
+            justification.textContent = `JUSTIFICACIÓN: ${currentQuestion.justification}`;
+            if (answeredQuestions.has(currentQuestionIndex)) {
+                 justification.classList.add('visible');
+            }
+            card.appendChild(justification);
+            
+            // Añadir la tarjeta al contenedor principal.
+            quizContainer.appendChild(card);
+            updateNavButtons();
+        }
+
+        // Manejar el clic en una opción.
+        function handleOptionClick(selectedOption, selectedText, correctAnswer) {
+            // Marcar la pregunta como respondida.
+            answeredQuestions.add(currentQuestionIndex);
+
+            // Sumar a los contadores.
+            if (selectedText === correctAnswer) {
+                correctAnswers++;
+                selectedOption.classList.add('correct');
+            } else {
+                incorrectAnswers++;
+                selectedOption.classList.add('incorrect');
+            }
+            
+            // Obtener todas las opciones de la pregunta actual.
+            const options = quizContainer.querySelectorAll('.option');
+            
+            // Deshabilitar todas las opciones para evitar múltiples clics.
+            options.forEach(option => {
+                option.style.pointerEvents = 'none';
+                if (option.textContent === correctAnswer) {
+                    option.classList.add('correct');
+                }
+            });
+
+            // Mostrar la justificación.
+            const explanation = quizContainer.querySelector('.explanation');
+            explanation.classList.add('visible');
+        }
+
+        // Función para mostrar los resultados al final del test.
+        function showResults() {
+            quizContainer.innerHTML = `
+                <div class="card text-center">
+                    <h2 class="text-2xl font-bold mb-4">¡Test finalizado!</h2>
+                    <p class="text-lg">Respuestas correctas: <span class="font-semibold text-green-600">${correctAnswers}</span></p>
+                    <p class="text-lg">Respuestas incorrectas: <span class="font-semibold text-red-600">${incorrectAnswers}</span></p>
+                    <p class="text-lg mt-4">Total de preguntas: <span class="font-semibold">${questions.length}</span></p>
+                </div>
+            `;
+            // Ocultar botones de navegación al mostrar resultados.
+            prevBtn.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+            // Mostrar botón de reinicio.
+            restartBtn.classList.remove('hidden');
+        }
+
+        // Actualizar el estado de los botones de navegación.
+        function updateNavButtons() {
+            prevBtn.classList.toggle('disabled', currentQuestionIndex === 0);
+            nextBtn.textContent = currentQuestionIndex === questions.length - 1 ? 'Finalizar' : 'Siguiente';
+        }
+
+        // Función para reiniciar el quiz.
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            correctAnswers = 0;
+            incorrectAnswers = 0;
+            answeredQuestions.clear();
+            prevBtn.classList.remove('hidden');
+            nextBtn.classList.remove('hidden');
+            restartBtn.classList.add('hidden');
+            renderQuestion();
+        }
+
+        // Navegación entre preguntas.
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestion();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < questions.length) {
+                currentQuestionIndex++;
+                renderQuestion();
+            }
+        });
+
+        // Event listener para el botón de reiniciar.
+        restartBtn.addEventListener('click', restartQuiz);
+
+        // Cargar la primera pregunta al inicio.
+        document.addEventListener('DOMContentLoaded', renderQuestion);
+    </script>
+</body>
+</html>

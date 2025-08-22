@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test MF1443</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .question-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #111827;
+        }
+        .option {
+            background-color: #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        .option:hover:not(.correct):not(.incorrect) {
+            background-color: #d1d5db;
+            transform: translateY(-2px);
+        }
+        .option.correct {
+            background-color: #dcfce7;
+            border: 2px solid #22c55e;
+            pointer-events: none;
+        }
+        .option.incorrect {
+            background-color: #fee2e2;
+            border: 2px solid #ef4444;
+            pointer-events: none;
+        }
+        .explanation {
+            background-color: #f9fafb;
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 0.5rem;
+            display: none;
+        }
+        .explanation.visible {
+            display: block;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+        }
+        .button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .button-primary {
+            background-color: #3b82f6;
+            color: #ffffff;
+        }
+        .button-primary:hover {
+            background-color: #2563eb;
+        }
+        .button-secondary {
+            background-color: #e5e7eb;
+            color: #1f2937;
+        }
+        .button-secondary:hover {
+            background-color: #d1d5db;
+        }
+        .disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8 flex items-center justify-center min-h-screen">
+    <div class="container bg-white rounded-xl shadow-lg p-6 md:p-10">
+        <h1 class="text-3xl font-bold text-center mb-6">Test de Evaluación MF1443 - Evaluación 6</h1>
+        <div id="quiz-container"></div>
+        <div class="nav-buttons flex justify-between mt-6">
+            <button id="prev-btn" class="button button-secondary disabled">Anterior</button>
+            <button id="next-btn" class="button button-primary">Siguiente</button>
+            <!-- Nuevo botón para reiniciar el test -->
+            <button id="restart-btn" class="button button-primary hidden">Volver a empezar</button>
+        </div>
+    </div>
+
+    <script>
+        // Array de objetos con las preguntas, opciones, respuesta correcta y justificación.
+        const questions = [
+            {
+                question: '¿Qué es un EVA?:',
+                options: [
+                    'a) Es una herramienta de software que se basa en la web y que ayuda a planificar y a ofrecer eventos de aprendizaje y a "gestionar" los alumnos/as siguiendo su progreso y su rendimiento a través de una variedad de actividades de aprendizaje.',
+                    'b) Se trata de un espacio donde se desarrolla un proceso formativo basado en nuevas tecnologías (TIC´s) y que consta de una serie de herramientas que permiten que se produzca aprendizaje a través de la interacción síncrona y asíncrona entre sus usuarios y los contenidos.',
+                    'c) Es una plataforma que incorpora un sistema de gestión de contenidos, es decir, incorpora una herramienta de autor que permite crear, almacenar y publicar recursos y actividades.',
+                    'd) Se enfoca en el desarrollo, la gestión y la edición de contenido que se trasmitiría normalmente a través del LMS.'
+                ],
+                correctAnswer: 'b) Se trata de un espacio donde se desarrolla un proceso formativo basado en nuevas tecnologías (TIC´s) y que consta de una serie de herramientas que permiten que se produzca aprendizaje a través de la interacción síncrona y asíncrona entre sus usuarios y los contenidos.',
+                justification: 'Un EVA (VLE, Virtual Learning Environments) es un espacio donde se desarrolla un proceso formativo basado en nuevas tecnologías (TIC´s) y que consta de una serie de herramientas que permiten que se produzca aprendizaje a través de la interacción síncrona y asíncrona entre sus usuarios y los contenidos.'
+            },
+            {
+                question: '¿Qué es un LCMS?:',
+                options: [
+                    'a) Es una plataforma que incorpora un sistema de gestión de contenidos, es decir, incorpora una herramienta de autor que permite crear, almacenar y publicar recursos y actividades.',
+                    'b) Se trata de un espacio donde se desarrolla un proceso formativo basado en nuevas tecnologías (TIC´s) y que consta de una serie de herramientas que permiten que se produzca aprendizaje a través de la interacción síncrona y asíncrona entre sus usuarios y los contenidos.',
+                    'c) Es una herramienta de software que se basa en la web y que ayuda a planificar y a ofrecer eventos de aprendizaje y a "gestionar" los alumnos/as siguiendo su progreso y su rendimiento a través de una variedad de actividades de aprendizaje.',
+                    'd) Es una plataforma que integra un EVA y, además, dispone de herramientas de administración.'
+                ],
+                correctAnswer: 'a) Es una plataforma que incorpora un sistema de gestión de contenidos, es decir, incorpora una herramienta de autor que permite crear, almacenar y publicar recursos y actividades.',
+                justification: 'Los LCMS (Learning Content Management System) las cuales son plataformas LMS que incorporan un sistema de gestión de contenidos, es decir, incorporan una herramienta de autor que permite crear, almacenar y publicar recursos y actividades. Se enfoca en el desarrollo, la gestión y la edición de contenido que se trasmitiría normalmente a través del LMS.'
+            },
+            {
+                question: '¿Para qué se utiliza la videoconferencia en una plataforma de teleformación?:',
+                options: [
+                    'a) Se trata de una herramienta de comunicación asíncrona, ya que no requiere que todas las personas que vayan a participar en él estén conectadas.',
+                    'b) El tutor/a lo puede proponer para estar disponible con un horario determinado y que el alumnado pueda conectarse a esas horas indicadas y, también, se puede utilizar como herramienta complementaria a la hora de realizar trabajos en pequeño grupo.',
+                    'c) Es un esquema que permite mostrar las partes dentro de un todo y sus relaciones. Al mismo tiempo, permite ver lo de dentro y lo de fuera, la superficie y el interior.',
+                    'd) Para tratar un tema concreto como si fuera una lección magistral en la que el tutor o tutora habla y está visible a través de su webcam y comparte una presentación o su pantalla con el alumnado.'
+                ],
+                correctAnswer: 'd) Para tratar un tema concreto como si fuera una lección magistral en la que el tutor o tutora habla y está visible a través de su webcam y comparte una presentación o su pantalla con el alumnado.',
+                justification: 'La videoconferencia es una aplicación de comunicación síncrona ya que todas las personas que participan en ella tienen que estar conectadas a la vez. Es lo más parecido a una sesión presencial. Se utiliza para tratar un tema concreto como si fuera una lección magistral en la que el tutor o tutora habla y está visible a través de su webcam y comparte una presentación o su pantalla con el alumnado. Al mismo tiempo, los alumnos/as participan mediante un chat y/o a través de su propia webcam haciendo preguntas y aportaciones a lo que se va tratando.'
+            },
+            {
+                question: '¿Cuál de las siguientes es una característica de los foros en una plataforma de teleformación?:',
+                options: [
+                    'a) Es la herramienta que utilizamos para transmitir toda aquella información que no es de interés común.',
+                    'b) Es la herramienta que utilizamos para enviar feedback individual a un alumno/a.',
+                    'c) Se considera la herramienta más importante para el aprendizaje. Se la equipara con el aula-clase en modalidad presencial.',
+                    'd) Es una herramienta que sirve para tratar un tema concreto como si fuera una lección magistral en la que el tutor o tutora habla y está visible a través de su webcam y comparte una presentación o su pantalla con el alumnado.'
+                ],
+                correctAnswer: 'c) Se considera la herramienta más importante para el aprendizaje. Se la equipara con el aula-clase en modalidad presencial.',
+                justification: 'Las características más importantes de un foro de discusión son las siguientes: Es una herramienta de comunicación asíncrona. Se considera la herramienta más importante para el aprendizaje. Se la equipara con el aula-clase en modalidad presencial. Sirve para la reflexión grupal sobre ideas, casos o artículos. Sin horarios establecidos y con permanencia de las aportaciones realizadas desde que comienza hasta que finaliza la acción formativa.'
+            },
+            {
+                question: 'Los recursos de distribución de contenidos…:',
+                options: [
+                    'a) Posibilitan asignar perfiles dentro de cada curso, controlar la inscripción y el acceso (esto generalmente se hace mediante autenticación con nombre de usuario y contraseña para usuarios registrados), etc.',
+                    'b) Deben proveer para el profesorado espacios en los que poner a disposición del alumnado información en forma de archivos (un repositorio de contenidos), que pueden tener distintos formatos (HTML, PDF, TXT, ODT, PNG...) y que se pueden organizar de forma jerarquizada (a través de carpetas/ directorios).',
+                    'c) Pueden ser cuestionarios editables por el profesor para la evaluación y autoevaluación del alumnado, tareas, informes de la actividad de cada alumno, plantillas de calificación.',
+                    'd) Algunos de ellos son los portafolios, el bloc de notas, sistemas de búsquedas de contenidos del curso, etc.'
+                ],
+                correctAnswer: 'b) Deben proveer para el profesorado espacios en los que poner a disposición del alumnado información en forma de archivos (un repositorio de contenidos), que pueden tener distintos formatos (HTML, PDF, TXT, ODT, PNG...) y que se pueden organizar de forma jerarquizada (a través de carpetas/ directorios).',
+                justification: 'Los recursos de distribución de contenidos deben proveer para el profesorado espacios en los que poner a disposición del alumnado información en forma de archivos (un repositorio de contenidos), que pueden tener distintos formatos (HTML, PDF, TXT, ODT, PNG...) y que se pueden organizar de forma jerarquizada (a través de carpetas/ directorios). También deben disponer de diversas formas de presentar contenidos e información: enlaces a archivos, a páginas Web, calendarios, etiquetas con diversos elementos (texto, imágenes estáticas y en movimiento...), FAQs, glosarios, etc.'
+            },
+            {
+                question: 'Los recursos de administración y asignación de permisos…:',
+                options: [
+                    'a) Deben disponer de diversas formas de presentar contenidos e información: enlaces a archivos, a páginas Web, calendarios, etiquetas con diversos elementos (texto, imágenes estáticas y en movimiento...), FAQs, glosarios, etc.',
+                    'b) Pueden ser cuestionarios editables por el profesor para la evaluación y autoevaluación del alumnado, tareas, informes de la actividad de cada alumno, plantillas de calificación.',
+                    'c) Posibilitan asignar perfiles dentro de cada curso, controlar la inscripción y el acceso (esto generalmente se hace mediante autenticación con nombre de usuario y contraseña para usuarios registrados), etc.',
+                    'd) Algunos de ellos son los portafolios, el bloc de notas, sistemas de búsquedas de contenidos del curso, etc.'
+                ],
+                correctAnswer: 'c) Posibilitan asignar perfiles dentro de cada curso, controlar la inscripción y el acceso (esto generalmente se hace mediante autenticación con nombre de usuario y contraseña para usuarios registrados), etc.',
+                justification: 'Los recursos de administración y asignación de permisos posibilitan asignar perfiles dentro de cada curso, controlar la inscripción y el acceso (esto generalmente se hace mediante autenticación con nombre de usuario y contraseña para usuarios registrados), etc. Estos procedimientos se pueden hacer a nivel de administrador, pero también a nivel de profesorado (por ejemplo activar o desactivar un curso, inscribir a usuarios del sistema como profesorado o alumnado del mismo, cierta personalización del entorno...).'
+            },
+            {
+                question: '¿A qué elemento hacemos referencia cuando hablamos de los contenidos del curso en una plataforma de teleformación?:',
+                options: [
+                    'a) A los recursos audiovisuales como vídeos o audios, referencias, programas de software libre y enlaces a páginas web que permiten complementar la formación básica que se consigue estudiando los contenidos del curso.',
+                    'b) Al elemento más importante de aprendizaje dentro de un curso e-learning comparándose con el aula-clase de la formación presencial.',
+                    'c) Al contenido que se puede archivar para ponerlo posteriormente a disposición de la clase para consultas posteriores.',
+                    'd) A los materiales básicos que el alumnado debe estudiar.'
+                ],
+                correctAnswer: 'd) A los materiales básicos que el alumnado debe estudiar.',
+                justification: 'Los contenidos del curso conforman los materiales básicos que el alumnado debe estudiar. Se pueden presentar en varios formatos como PDF, Powerpoint o flash. Si se crean bajo el estándar SCORM (Sharable Content Object Reference Model) se pueden utilizar en diferentes plataformas y además guardan un seguimiento del trabajo de cada alumno/a.'
+            },
+            {
+                question: '¿Qué son las actividades dentro de un curso e-learning?:',
+                options: [
+                    'a) Se trata de una serie de imágenes y sus textos explicativos que pueden ser controlados de forma sincronizada por el/la docente, permitiendo aportaciones de los alumnos/as. De esta forma, se convierte en una presentación multiusuarios distribuida.',
+                    'b) Aquellos elementos que sirven para la reflexión grupal sobre ideas, casos o artículos.',
+                    'c) Los instrumentos con los que cuenta el tutor/a para poder valorar el nivel de aprendizaje de los participantes.',
+                    'd) Se trata de cuestionarios editables por el profesor para la evaluación y autoevaluación del alumnado, tareas, informes de la actividad de cada alumno/a y plantillas de calificación.'
+                ],
+                correctAnswer: 'c) Los instrumentos con los que cuenta el tutor/a para poder valorar el nivel de aprendizaje de los participantes.',
+                justification: 'Las actividades e-learning serán los instrumentos con los que cuente el tutor/a para poder valorar el nivel de aprendizaje de los participantes. Los criterios más importantes que debe seguir son los siguientes: Deben orientarse de forma práctica y que resulten útiles en el contexto laboral del alumnado, de manera que les sirvan de forma inmediata y puedan ayudarle en su desarrollo profesional. Deben perseguir los objetivos de aprendizaje marcados y, por lo tanto, su realización permitirá medir si se están alcanzando. Deben estar conectadas con los contenidos del curso y, por tanto, el alumnado podrá realizarlas tras haber estudiado los contenidos. Se deben de poder realizar con los recursos disponibles en la plataforma o con los que cuente el alumnado.'
+            },
+            {
+                question: '¿A qué llamamos actividades individuales?:',
+                options: [
+                    'a) Son aquellos recursos que permiten evaluar el conocimiento adquirido sin valoraciones subjetivas y dando como resultado una calificación cuantitativa.',
+                    'b) Se trata de tareas de respuesta abierta en las cuales el alumno/a tendrá que reflexionar, resumir o criticar un tema específico dentro de los contenidos estudiados.',
+                    'c) Se trata de una sucesión de tareas que el alumno/a tendrá que ir realizando a lo largo de un módulo o un curso completo cuando el proceso a aprender resulta complejo.',
+                    'd) Son aquellos recursos que permiten simular situaciones reales que el alumno/a debe estudiar y analizar para, posteriormente proponer la resolución más eficaz.'
+                ],
+                correctAnswer: 'b) Se trata de tareas de respuesta abierta en las cuales el alumno/a tendrá que reflexionar, resumir o criticar un tema específico dentro de los contenidos estudiados.',
+                justification: 'Las actividades individuales son tareas de respuesta abierta en las cuales el alumno/a tendrá que reflexionar, resumir o criticar un tema específico dentro de los contenidos estudiados. En este tipo de actividades se evalúa el proceso que sigue el alumno/a para resolverlo más que el resultado final.'
+            },
+            {
+                question: '¿Qué es un rol-play?:',
+                options: [
+                    'a) Una actividad que se puede desarrollar en el foro de forma que el tutor/a adjuntará a un tema un documento que posea el caso a estudiar y los alumnos/as deberán analizarlo y discutir sobre las soluciones que vayan proponiendo uno/as y otros/as.',
+                    'b) Una actividad que permite predecir una situación futura cuando vea que se juntan las variables de un caso similar al estudiado.',
+                    'c) Una actividad que permite simular situaciones reales que el alumno/a debe estudiar y analizar para, posteriormente proponer la resolución más eficaz.',
+                    'd) Una actividad en la que el alumno/a pueda ensayar una situación en la que ponga en marcha conocimientos y habilidades adquiridas en el curso, simulando la realidad en un entorno seguro.'
+                ],
+                correctAnswer: 'd) Una actividad en la que el alumno/a pueda ensayar una situación en la que ponga en marcha conocimientos y habilidades adquiridas en el curso, simulando la realidad en un entorno seguro.',
+                justification: 'El rol-play es una actividades en la que el alumno/a pueda ensayar una situación en la que ponga en marcha conocimientos y habilidades adquiridas en el curso, simulando la realidad en un entorno seguro. Al diseñar esta actividad, debemos definir claramente el objetivo que se persigue y la situación concreta que contenga todas las variables necesarias para que el alumno/a pueda demostrar que es capaz de resolverla. Se trata de una técnica que también se puede desarrollar en grupo adoptando cada alumno/a un rol y proponiendo una solución dependiendo del rol que le ha tocado desarrollar.'
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let correctAnswers = 0;
+        let incorrectAnswers = 0;
+        let answeredQuestions = new Set();
+        const quizContainer = document.getElementById('quiz-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const restartBtn = document.getElementById('restart-btn');
+
+        // Función para renderizar la pregunta actual.
+        function renderQuestion() {
+            // Limpiar el contenedor del quiz.
+            quizContainer.innerHTML = '';
+            
+            // Si hemos llegado al final del test, mostramos los resultados.
+            if (currentQuestionIndex >= questions.length) {
+                showResults();
+                return;
+            }
+
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            // Crear la tarjeta de la pregunta.
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            // Título de la pregunta.
+            const questionTitle = document.createElement('div');
+            questionTitle.className = 'question-title';
+            questionTitle.textContent = `${currentQuestionIndex + 1}) ${currentQuestion.question}`;
+            card.appendChild(questionTitle);
+            
+            // Opciones de respuesta.
+            currentQuestion.options.forEach(optionText => {
+                const option = document.createElement('div');
+                option.className = 'option';
+                option.textContent = optionText;
+                
+                // Si la pregunta ya fue respondida, deshabilitar clics y mostrar la justificación.
+                if (answeredQuestions.has(currentQuestionIndex)) {
+                    option.style.pointerEvents = 'none';
+                    if (optionText === currentQuestion.correctAnswer) {
+                        option.classList.add('correct');
+                    }
+                    if (optionText !== currentQuestion.correctAnswer) {
+                        option.classList.add('incorrect');
+                    }
+                } else {
+                    option.addEventListener('click', () => handleOptionClick(option, optionText, currentQuestion.correctAnswer));
+                }
+                card.appendChild(option);
+            });
+            
+            // Justificación de la respuesta.
+            const justification = document.createElement('div');
+            justification.className = 'explanation';
+            justification.textContent = `JUSTIFICACIÓN: ${currentQuestion.justification}`;
+            if (answeredQuestions.has(currentQuestionIndex)) {
+                 justification.classList.add('visible');
+            }
+            card.appendChild(justification);
+            
+            // Añadir la tarjeta al contenedor principal.
+            quizContainer.appendChild(card);
+            updateNavButtons();
+        }
+
+        // Manejar el clic en una opción.
+        function handleOptionClick(selectedOption, selectedText, correctAnswer) {
+            // Marcar la pregunta como respondida.
+            answeredQuestions.add(currentQuestionIndex);
+
+            // Sumar a los contadores.
+            if (selectedText === correctAnswer) {
+                correctAnswers++;
+                selectedOption.classList.add('correct');
+            } else {
+                incorrectAnswers++;
+                selectedOption.classList.add('incorrect');
+            }
+            
+            // Obtener todas las opciones de la pregunta actual.
+            const options = quizContainer.querySelectorAll('.option');
+            
+            // Deshabilitar todas las opciones para evitar múltiples clics.
+            options.forEach(option => {
+                option.style.pointerEvents = 'none';
+                if (option.textContent === correctAnswer) {
+                    option.classList.add('correct');
+                }
+            });
+
+            // Mostrar la justificación.
+            const explanation = quizContainer.querySelector('.explanation');
+            explanation.classList.add('visible');
+        }
+
+        // Función para mostrar los resultados al final del test.
+        function showResults() {
+            quizContainer.innerHTML = `
+                <div class="card text-center">
+                    <h2 class="text-2xl font-bold mb-4">¡Test finalizado!</h2>
+                    <p class="text-lg">Respuestas correctas: <span class="font-semibold text-green-600">${correctAnswers}</span></p>
+                    <p class="text-lg">Respuestas incorrectas: <span class="font-semibold text-red-600">${incorrectAnswers}</span></p>
+                    <p class="text-lg mt-4">Total de preguntas: <span class="font-semibold">${questions.length}</span></p>
+                </div>
+            `;
+            // Ocultar botones de navegación al mostrar resultados.
+            prevBtn.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+            // Mostrar botón de reinicio.
+            restartBtn.classList.remove('hidden');
+        }
+
+        // Actualizar el estado de los botones de navegación.
+        function updateNavButtons() {
+            prevBtn.classList.toggle('disabled', currentQuestionIndex === 0);
+            nextBtn.textContent = currentQuestionIndex === questions.length - 1 ? 'Finalizar' : 'Siguiente';
+        }
+
+        // Función para reiniciar el quiz.
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            correctAnswers = 0;
+            incorrectAnswers = 0;
+            answeredQuestions.clear();
+            prevBtn.classList.remove('hidden');
+            nextBtn.classList.remove('hidden');
+            restartBtn.classList.add('hidden');
+            renderQuestion();
+        }
+
+        // Navegación entre preguntas.
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestion();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < questions.length) {
+                currentQuestionIndex++;
+                renderQuestion();
+            }
+        });
+
+        // Event listener para el botón de reiniciar.
+        restartBtn.addEventListener('click', restartQuiz);
+
+        // Cargar la primera pregunta al inicio.
+        document.addEventListener('DOMContentLoaded', renderQuestion);
+    </script>
+</body>
+</html>

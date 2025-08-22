@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test MF1443</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .question-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #111827;
+        }
+        .option {
+            background-color: #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        .option:hover:not(.correct):not(.incorrect) {
+            background-color: #d1d5db;
+            transform: translateY(-2px);
+        }
+        .option.correct {
+            background-color: #dcfce7;
+            border: 2px solid #22c55e;
+            pointer-events: none;
+        }
+        .option.incorrect {
+            background-color: #fee2e2;
+            border: 2px solid #ef4444;
+            pointer-events: none;
+        }
+        .explanation {
+            background-color: #f9fafb;
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 0.5rem;
+            display: none;
+        }
+        .explanation.visible {
+            display: block;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+        }
+        .button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .button-primary {
+            background-color: #3b82f6;
+            color: #ffffff;
+        }
+        .button-primary:hover {
+            background-color: #2563eb;
+        }
+        .button-secondary {
+            background-color: #e5e7eb;
+            color: #1f2937;
+        }
+        .button-secondary:hover {
+            background-color: #d1d5db;
+        }
+        .disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8 flex items-center justify-center min-h-screen">
+    <div class="container bg-white rounded-xl shadow-lg p-6 md:p-10">
+        <h1 class="text-3xl font-bold text-center mb-6">Test de Evaluación MF1443 FINAL</h1>
+        <div id="quiz-container"></div>
+        <div class="nav-buttons flex justify-between mt-6">
+            <button id="prev-btn" class="button button-secondary disabled">Anterior</button>
+            <button id="next-btn" class="button button-primary">Siguiente</button>
+             <!-- Nuevo botón para reiniciar el test -->
+            <button id="restart-btn" class="button button-primary hidden">Volver a empezar</button>
+        </div>
+    </div>
+
+    <script>
+        // Array de objetos con las preguntas, opciones, respuesta correcta y justificación.
+        const questions = [
+            {
+                question: '¿Cuál de los siguientes es el primer paso que hay que dar para elaborar una infografía relevante?:',
+                options: [
+                    'a) Recolectar todos los datos necesarios que queremos que aparezcan representados.',
+                    'b) Contar una historia eligiendo al personaje guía para que todo fluya de forma adecuada.',
+                    'c) Crear un plan para crearnos una idea clara del objetivo que pretendemos con ella.',
+                    'd) Utilizar la teoría del color: utilizando paletas de color adecuadas, conseguimos la atención.'
+                ],
+                correctAnswer: 'c) Crear un plan para crearnos una idea clara del objetivo que pretendemos con ella.',
+                justification: 'Los pasos a seguir para elaborar una infografía relevante son los siguientes: Crear un plan para crearnos una idea clara del objetivo que pretendemos con ella. Recolectar todos los datos necesarios que queremos que aparezcan representados. Contar una historia eligiendo al personaje guía para que todo fluya de forma adecuada. Decidir el diseño de la infografía. Utilizar la teoría del color: utilizando paletas de color adecuadas, conseguimos la atención. Pedir una opinión: antes de dar por válida la versión final de la infografía.'
+            },
+            {
+                question: '¿Cuál de los siguientes NO es un tipo de material audiovisual?:',
+                options: [
+                    'a) Audioconferencia.',
+                    'b) Videoconferencia.',
+                    'c) Radio.',
+                    'd) Transparencia.'
+                ],
+                correctAnswer: 'd) Transparencia.',
+                justification: 'Los diferentes tipos de materiales audiovisuales son: Audioconferencia, Videoconferencia, Radio, Televisión y CD-ROM/DVD. La transparencia es un material visual, no audiovisual.'
+            },
+            {
+                question: '¿Cuál de las siguientes es una característica de los foros?:',
+                options: [
+                    'a) Por lo general aparecen como complemento a un sitio web, invitando a los usuarios/as a discutir o compartir información relevante sobre la temática del sitio.',
+                    'b) Los textos que configuran las entradas suelen incluir diferentes palabras señaladas sobre las cuales se puede clicar para llegar a otra página o referencia.',
+                    'c) Es habitual que incluyan fotos, vídeos y grabaciones de audio que favorecen la comprensión.',
+                    'd) Son unas listas que elaboraremos para conseguir la distribución masiva de información entre múltiples usuarios de Internet en simultáneo.'
+                ],
+                correctAnswer: 'a) Por lo general aparecen como complemento a un sitio web, invitando a los usuarios/as a discutir o compartir información relevante sobre la temática del sitio.',
+                justification: 'Los foros son discusiones en línea que suelen complementar un sitio web, permitiendo a los usuarios compartir información y formar una comunidad en torno a un interés común.'
+            },
+            {
+                question: '¿Cuál de las siguientes es una utilidad de los blogs en formación?:',
+                options: [
+                    'a) Sirve como biblioteca o base de datos en torno a casos o temas concretos.',
+                    'b) Es una herramienta muy adecuada para la creación de tutoriales.',
+                    'c) Sirve para explicar una actividad por parte del profesorado.',
+                    'd) Sirve como almacenaje de trabajos de los alumnos/as, ensayos o comentarios que permiten el seguimiento de su progreso.'
+                ],
+                correctAnswer: 'd) Sirve como almacenaje de trabajos de los alumnos/as, ensayos o comentarios que permiten el seguimiento de su progreso.',
+                justification: 'Las utilidades de los blogs en formación incluyen describir eventos, servir como espacio de cooperación entre estudiantes, y almacenar trabajos para seguir el progreso del alumnado.'
+            },
+            {
+                question: '¿Qué es el scrapbook de una pizarra digital?:',
+                options: [
+                    'a) Una herramienta que permite grabar todo lo que suceda en el ordenador, incluso pistas de audio con el micrófono.',
+                    'b) Es la guía en la que ubicamos los elementos de la maquetación con el objeto de conseguir un orden y estética.',
+                    'c) Se trata de una herramienta de autor pensada para que el personal docente pueda crear sus propios contenidos para, posteriormente, proyectarlos en la pizarra digital interactiva.',
+                    'd) Una herramienta que permite hacer capturas totales o parciales de lo que se muestra en pantalla.'
+                ],
+                correctAnswer: 'c) Se trata de una herramienta de autor pensada para que el personal docente pueda crear sus propios contenidos para, posteriormente, proyectarlos en la pizarra digital interactiva.',
+                justification: 'El scrapbook es una herramienta de autor que permite al personal docente crear contenidos para ser proyectados en la pizarra digital interactiva, convirtiendo la superficie de proyección en un espacio de trabajo digital.'
+            },
+            {
+                question: '¿En qué lugar del espacio se debe colocar la pantalla de la pizarra digital?:',
+                options: [
+                    'a) A 120 cm del alumno/a más cercano/a.',
+                    'b) En la parte frontal del aula, junto a una pizarra convencional.',
+                    'c) En un rincón frontal del aula.',
+                    'd) En cualquier pared blanca de la que disponga el aula.'
+                ],
+                correctAnswer: 'b) En la parte frontal del aula, junto a una pizarra convencional.',
+                justification: 'La pantalla de la pizarra digital debe colocarse en la parte frontal del aula, idealmente junto a una pizarra convencional, y se debe evitar que esté frente a una ventana luminosa.'
+            },
+            {
+                question: '¿En qué consiste la técnica Pecha Kucha?:',
+                options: [
+                    'a) En presentar 20 diapositivas de unos 7 segundos cada una.',
+                    'b) En presentar 20 diapositivas de unos 20 segundos cada una.',
+                    'c) En presentar 7 diapositivas de unos 20 segundos cada una.',
+                    'd) En presentar 7 diapositivas de unos 7 segundos cada una.'
+                ],
+                correctAnswer: 'b) En presentar 20 diapositivas de unos 20 segundos cada una.',
+                justification: 'La técnica Pecha Kucha consiste en presentar 20 diapositivas durante 20 segundos cada una, con una duración máxima de 7 minutos, para evitar presentaciones demasiado largas y con exceso de información.'
+            },
+            {
+                question: 'De las diferentes condiciones que le podemos poner a la licencia Creative Commons de nuestra obra ¿cuál hace referencia a "Atribución"?:',
+                options: [
+                    'a) Esta opción permite a otros copiar, distribuir, mostrar y ejecutar el trabajo patentado y todos los derivados del mismo, pero únicamente con propósitos no comerciales.',
+                    'b) Esta opción permite a otros copiar, distribuir, mostrar y ejecutar el trabajo patentado y todos los derivados del mismo, dando siempre testimonio de la autoría del mismo.',
+                    'c) Esta licencia permite a otros realizar trabajos derivados pero únicamente bajo una licencia idéntica.',
+                    'd) Esta opción permite a otros copiar, distribuir, mostrar y ejecutar solo copias literales del trabajo patentado, no estando autorizado ningún tercero a realizar trabajos derivados del mismo.'
+                ],
+                correctAnswer: 'b) Esta opción permite a otros copiar, distribuir, mostrar y ejecutar el trabajo patentado y todos los derivados del mismo, dando siempre testimonio de la autoría del mismo.',
+                justification: 'La condición de "Atribución" de Creative Commons significa que otros pueden usar la obra y sus derivados siempre y cuando se dé crédito al autor original.'
+            },
+            {
+                question: '¿Cuál de las siguientes es una buena práctica en cuanto a formato?:',
+                options: [
+                    'a) Tener en cuenta el origen de las fibras.',
+                    'b) Evitar hojas en blanco y márgenes innecesarios.',
+                    'c) Tener en cuenta el proceso de blanqueo.',
+                    'd) Plantearnos el uso de tintas que empleen sistema de base acuosa.'
+                ],
+                correctAnswer: 'b) Evitar hojas en blanco y márgenes innecesarios.',
+                justification: 'Una de las buenas prácticas en cuanto a formato es evitar hojas en blanco y márgenes innecesarios para optimizar el uso de recursos.'
+            },
+            {
+                question: '¿Cuáles de los siguientes son colores secundarios en el círculo cromático?:',
+                options: [
+                    'a) Magenta, cian y amarillo.',
+                    'b) Rojo violáceo, rojo anaranjado, amarillo anaranjado.',
+                    'c) Amarillo verdoso, azul verdoso y azul violáceo.',
+                    'd) Verde, violeta y naranja.'
+                ],
+                correctAnswer: 'd) Verde, violeta y naranja.',
+                justification: 'Los colores secundarios en el círculo cromático se obtienen al mezclar los colores primarios. Estos son el verde (azul + amarillo), el violeta (rojo + azul) y el naranja (rojo + amarillo).'
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let correctAnswers = 0;
+        let incorrectAnswers = 0;
+        let answeredQuestions = new Set();
+        const quizContainer = document.getElementById('quiz-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const restartBtn = document.getElementById('restart-btn');
+
+        // Función para renderizar la pregunta actual.
+        function renderQuestion() {
+            // Limpiar el contenedor del quiz.
+            quizContainer.innerHTML = '';
+            
+            // Si hemos llegado al final del test, mostramos los resultados.
+            if (currentQuestionIndex >= questions.length) {
+                showResults();
+                return;
+            }
+
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            // Crear la tarjeta de la pregunta.
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            // Título de la pregunta.
+            const questionTitle = document.createElement('div');
+            questionTitle.className = 'question-title';
+            questionTitle.textContent = `${currentQuestionIndex + 1}) ${currentQuestion.question}`;
+            card.appendChild(questionTitle);
+            
+            // Opciones de respuesta.
+            currentQuestion.options.forEach(optionText => {
+                const option = document.createElement('div');
+                option.className = 'option';
+                option.textContent = optionText;
+                
+                // Si la pregunta ya fue respondida, deshabilitar clics y mostrar la justificación.
+                if (answeredQuestions.has(currentQuestionIndex)) {
+                    option.style.pointerEvents = 'none';
+                    if (optionText === currentQuestion.correctAnswer) {
+                        option.classList.add('correct');
+                    }
+                    if (optionText !== currentQuestion.correctAnswer) {
+                        option.classList.add('incorrect');
+                    }
+                } else {
+                    option.addEventListener('click', () => handleOptionClick(option, optionText, currentQuestion.correctAnswer));
+                }
+                card.appendChild(option);
+            });
+            
+            // Justificación de la respuesta.
+            const justification = document.createElement('div');
+            justification.className = 'explanation';
+            justification.textContent = `JUSTIFICACIÓN: ${currentQuestion.justification}`;
+            if (answeredQuestions.has(currentQuestionIndex)) {
+                 justification.classList.add('visible');
+            }
+            card.appendChild(justification);
+            
+            // Añadir la tarjeta al contenedor principal.
+            quizContainer.appendChild(card);
+            updateNavButtons();
+        }
+
+        // Manejar el clic en una opción.
+        function handleOptionClick(selectedOption, selectedText, correctAnswer) {
+            // Marcar la pregunta como respondida.
+            answeredQuestions.add(currentQuestionIndex);
+
+            // Sumar a los contadores.
+            if (selectedText === correctAnswer) {
+                correctAnswers++;
+                selectedOption.classList.add('correct');
+            } else {
+                incorrectAnswers++;
+                selectedOption.classList.add('incorrect');
+            }
+            
+            // Obtener todas las opciones de la pregunta actual.
+            const options = quizContainer.querySelectorAll('.option');
+            
+            // Deshabilitar todas las opciones para evitar múltiples clics.
+            options.forEach(option => {
+                option.style.pointerEvents = 'none';
+                if (option.textContent === correctAnswer) {
+                    option.classList.add('correct');
+                }
+            });
+
+            // Mostrar la justificación.
+            const explanation = quizContainer.querySelector('.explanation');
+            explanation.classList.add('visible');
+        }
+
+        // Función para mostrar los resultados al final del test.
+        function showResults() {
+            quizContainer.innerHTML = `
+                <div class="card text-center">
+                    <h2 class="text-2xl font-bold mb-4">¡Test finalizado!</h2>
+                    <p class="text-lg">Respuestas correctas: <span class="font-semibold text-green-600">${correctAnswers}</span></p>
+                    <p class="text-lg">Respuestas incorrectas: <span class="font-semibold text-red-600">${incorrectAnswers}</span></p>
+                    <p class="text-lg mt-4">Total de preguntas: <span class="font-semibold">${questions.length}</span></p>
+                </div>
+            `;
+            // Ocultar botones de navegación al mostrar resultados.
+            prevBtn.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+            // Mostrar botón de reinicio.
+            restartBtn.classList.remove('hidden');
+        }
+
+        // Actualizar el estado de los botones de navegación.
+        function updateNavButtons() {
+            prevBtn.classList.toggle('disabled', currentQuestionIndex === 0);
+            nextBtn.textContent = currentQuestionIndex === questions.length - 1 ? 'Finalizar' : 'Siguiente';
+        }
+
+        // Función para reiniciar el quiz.
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            correctAnswers = 0;
+            incorrectAnswers = 0;
+            answeredQuestions.clear();
+            prevBtn.classList.remove('hidden');
+            nextBtn.classList.remove('hidden');
+            restartBtn.classList.add('hidden');
+            renderQuestion();
+        }
+
+        // Navegación entre preguntas.
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestion();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < questions.length) {
+                currentQuestionIndex++;
+                renderQuestion();
+            }
+        });
+
+        // Event listener para el botón de reiniciar.
+        restartBtn.addEventListener('click', restartQuiz);
+
+        // Cargar la primera pregunta al inicio.
+        document.addEventListener('DOMContentLoaded', renderQuestion);
+    </script>
+</body>
+</html>
+

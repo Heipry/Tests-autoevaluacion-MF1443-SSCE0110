@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test MF1443</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .question-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #111827;
+        }
+        .option {
+            background-color: #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        .option:hover:not(.correct):not(.incorrect) {
+            background-color: #d1d5db;
+            transform: translateY(-2px);
+        }
+        .option.correct {
+            background-color: #dcfce7;
+            border: 2px solid #22c55e;
+            pointer-events: none;
+        }
+        .option.incorrect {
+            background-color: #fee2e2;
+            border: 2px solid #ef4444;
+            pointer-events: none;
+        }
+        .explanation {
+            background-color: #f9fafb;
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 0.5rem;
+            display: none;
+        }
+        .explanation.visible {
+            display: block;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+        }
+        .button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .button-primary {
+            background-color: #3b82f6;
+            color: #ffffff;
+        }
+        .button-primary:hover {
+            background-color: #2563eb;
+        }
+        .button-secondary {
+            background-color: #e5e7eb;
+            color: #1f2937;
+        }
+        .button-secondary:hover {
+            background-color: #d1d5db;
+        }
+        .disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8 flex items-center justify-center min-h-screen">
+    <div class="container bg-white rounded-xl shadow-lg p-6 md:p-10">
+        <h1 class="text-3xl font-bold text-center mb-6">Test de Evaluación MF1443 - Autoevaluación 5</h1>
+        <div id="quiz-container"></div>
+        <div class="nav-buttons flex justify-between mt-6">
+            <button id="prev-btn" class="button button-secondary disabled">Anterior</button>
+            <button id="next-btn" class="button button-primary">Siguiente</button>
+            <!-- Nuevo botón para reiniciar el test -->
+            <button id="restart-btn" class="button button-primary hidden">Volver a empezar</button>
+        </div>
+    </div>
+
+    <script>
+        // Array de objetos con las preguntas, opciones, respuesta correcta y justificación.
+        const questions = [
+            {
+                question: 'La pizarra digital interactiva (PDI) es:',
+                options: [
+                    'a) Un sistema tecnológico integrado por un ordenador y un dispositivo de control de puntero PDI.',
+                    'b) Un sistema tecnológico integrado por un ordenador, un video proyector.',
+                    'c) Un sistema tecnológico de pantalla táctil.',
+                    'd) Todas son correctas.'
+                ],
+                correctAnswer: 'd) Todas son correctas.',
+                justification: 'Según la definición del doctor Pere Marquès, la pizarra digital interactiva es un sistema tecnológico, generalmente integrado por un ordenador, un videoproyector y un dispositivo de control de puntero, que permite proyectar en una superficie interactiva contenidos digitales en un formato idóneo para visualización en grupo. Se puede interactuar directamente sobre la superficie de proyección.'
+            },
+            {
+                question: 'La pizarra digital interactiva es un sistema tecnológico situado en el aula que permite:',
+                options: [
+                    'a) Reproducir sonidos y proyectar imágenes.',
+                    'b) Reproducir sonidos, proyectar imágenes, controlar, crear y modificar mediante un puntero, o con el dedo, guardar e imprimir cualquier recurso educativo digital.',
+                    'c) Crear y modificar los recursos educativos digitales.',
+                    'd) Imprimir los recursos educativos trabajados en el aula.'
+                ],
+                correctAnswer: 'b) Reproducir sonidos, proyectar imágenes, controlar, crear y modificar mediante un puntero, o con el dedo, guardar e imprimir cualquier recurso educativo digital.',
+                justification: 'La pizarra digital es un sistema tecnológico situado en el aula que reproduce sonidos y proyecta imágenes. Nos permite controlar, crear y modificar mediante un puntero, o incluso con el dedo, cualquier recurso educativo digital que se proyecta sobre ella. Así, cualquier anotación o modificación se puede guardar, imprimir y distribuir.'
+            },
+            {
+                question: 'En la pizarra digital interactiva se puede:',
+                options: [
+                    'a) Hacer modificaciones (agrandar, achicar, dibujar, etc.).',
+                    'b) Hacer anotaciones.',
+                    'c) Hacer modificaciones, anotaciones y guardar los cambios realizados e imprimir el material educativo.',
+                    'd) Guardar los cambios realizados sobre el material educativo.'
+                ],
+                correctAnswer: 'c) Hacer modificaciones, anotaciones y guardar los cambios realizados e imprimir el material educativo.',
+                justification: 'La pizarra digital interactiva (PDI) nos permite controlar, crear y modificar mediante un puntero, o incluso con el dedo, cualquier recurso educativo digital que se proyecta sobre ella. Así, cualquier anotación o modificación se puede guardar, imprimir y distribuir.'
+            },
+            {
+                question: 'Atendiendo a su tecnología las pizarras digitales pueden ser:',
+                options: [
+                    'a) Táctiles y con tecnología de infra rojos ultrasonidos.',
+                    'b) Electromagnéticas y táctiles.',
+                    'c) Táctiles, electromagnéticas y con tecnología de infra rojos y ultrasonido.',
+                    'd) Táctiles y Vileda.'
+                ],
+                correctAnswer: 'c) Táctiles, electromagnéticas y con tecnología de infra rojos y ultrasonido.',
+                justification: 'La British Educational Communications and Technology Agency (BECTA), clasifica las pizarras digitales interactivas, atendiendo a su tecnología, en los siguientes tres tipos: Pizarras táctiles. Pizarras electromagnéticas. Pizarras con tecnología de infrarrojos/ultrasonidos.'
+            },
+            {
+                question: 'Las pantallas digitales interactivas para aumentar su funcionalidad pueden ser asociadas a:',
+                options: [
+                    'a) Una webcam y altavoces.',
+                    'b) Una impresora con escáner.',
+                    'c) Una tablet, la cual nos permitiría interactuar con la pizarra desde cualquier lugar del aula.',
+                    'd) Todas son correctas.'
+                ],
+                correctAnswer: 'd) Todas son correctas.',
+                justification: 'Podemos aumentar la funcionalidad de una pizarra digital añadiendo otros elementos, como: Una webcam. Una impresora. Altavoces. Un escáner. Una tablet. Vídeo.'
+            },
+            {
+                question: 'El uso asociado de diversas herramientas (ordenador, proyector,video, tablet, etc) a la utilización de la pizarra digital interactiva implica el desarrollo de habilidades y competencias del docente. ¿Qué habilidades debe desarrollar un docente que vaya a usar una PDI?:',
+                options: [
+                    'a) Uso de ordenador, video proyector, PDI, TICs.',
+                    'b) Uso del puntero digital.',
+                    'c) Uso de navegadores.',
+                    'd) Aprender a configurar la imagen.'
+                ],
+                correctAnswer: 'a) Uso de ordenador, video proyector, PDI, TICs.',
+                justification: 'Habilidades que debemos desarrollar según las herramientas que usemos en el aula: Vídeo proyector: encendido y apagado, configuración de imagen y conexión al ordenador y a otros dispositivos. Ordenador: utilización básica de un equipo informático. Lanzar y cerrar aplicaciones, uso de navegadores y utilización de herramientas de autor para la creación de materiales de clase. Pizarra digital: uso del software para manejo de la pizarra y uso didáctico de la pizarra en el aula. Otras competencias: selección y valoración de recursos digitales y utilización de las TIC en el aula.'
+            },
+            {
+                question: 'Alguna de las finalidades que podemos alcanzar con la pizarra digital son:',
+                options: [
+                    'a) Permite controlar al grupo de aprendizaje.',
+                    'b) Permite la realización y corrección colectiva de ejercicios.',
+                    'c) Permite un apoyo emocional al alumno.',
+                    'd) Ninguna es correcta.'
+                ],
+                correctAnswer: 'b) Permite la realización y corrección colectiva de ejercicios.',
+                justification: 'Hay muchas maneras de utilizar y aprovechar de forma didáctica una pizarra digital. Algunas de las finalidades que podemos alcanzar con su uso son las siguientes: Favorece las explicaciones del personal docente, ya que permite proyectar cualquier tipo de contenidos: presentaciones de diapositivas, vídeos, páginas web... Permite la realización y corrección colectiva de ejercicios. Permite al docente la elaboración de materiales didácticos, ya que dispone de un software específico. Supone un apoyo en cuanto a documentación, respuestas a preguntas sorpresivas y mejora de la comprensión. Al permitir guardar sucesivas pizarras, no se pierde información y podemos seguir con nuevas pantallas en blanco. Permite la escritura manual y el reconocimiento óptico de los caracteres escritos, así como la escritura mediante teclado proyectado en la pizarra. La utilización de la lupa permite aumentar el tamaño de lo proyectado. Interviene como activador de la atención y de la motivación. Permite mantener el contacto visual permanente del alumnado. La utilización del reflector permite fijar la atención sobre aquella zona de la proyección que interese.'
+            },
+            {
+                question: 'Antes de su uso la pantalla digital debe ser:',
+                options: [
+                    'a) Calibrada.',
+                    'b) Configurada.',
+                    'c) Ordenada.',
+                    'd) Instalada.'
+                ],
+                correctAnswer: 'a) Calibrada.',
+                justification: 'Todas las pizarras digitales interactivas necesitan, antes de su uso, una calibración.'
+            },
+            {
+                question: 'La calibración de una pantalla digital permite:',
+                options: [
+                    'a) Definir los puntos que van a constituir la superficie de trabajo del docente y que deben coincidir con las dimensiones de las imágenes proyectadas.',
+                    'b) Definir la superficie de trabajo del docente.',
+                    'c) Definir la precisión de la pantalla digital.',
+                    'd) Definir la alineación de la pantalla digital.'
+                ],
+                correctAnswer: 'a) Definir los puntos que van a constituir la superficie de trabajo del docente y que deben coincidir con las dimensiones de las imágenes proyectadas.',
+                justification: 'Todas las pizarras digitales interactivas necesitan, antes de su uso, una calibración, lo que permite definir los puntos que van a constituir nuestra superficie de trabajo y que debe coincidir con las dimensiones de las imágenes proyectadas.'
+            },
+            {
+                question: 'La alineación de una pantalla digital significa:',
+                options: [
+                    'a) Los puntos que van a constituir la PDI.',
+                    'b) La superficie del trabajo docente.',
+                    'c) Las dimensiones de las imágenes proyectadas.',
+                    'd) Los puntos que aumentan la precisión de la posición de la PDI (9, 16, 40 u 80 puntos).'
+                ],
+                correctAnswer: 'd) Los puntos que aumentan la precisión de la posición de la PDI (9, 16, 40 u 80 puntos).',
+                justification: 'El proceso de la alineación en 9, 16, 40 u 80 puntos aumenta la precisión de la PDI. Cuantos más puntos utilicemos en este proceso, con más precisión se detectará la posición.'
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let correctAnswers = 0;
+        let incorrectAnswers = 0;
+        let answeredQuestions = new Set();
+        const quizContainer = document.getElementById('quiz-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const restartBtn = document.getElementById('restart-btn');
+
+        // Función para renderizar la pregunta actual.
+        function renderQuestion() {
+            // Limpiar el contenedor del quiz.
+            quizContainer.innerHTML = '';
+            
+            // Si hemos llegado al final del test, mostramos los resultados.
+            if (currentQuestionIndex >= questions.length) {
+                showResults();
+                return;
+            }
+
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            // Crear la tarjeta de la pregunta.
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            // Título de la pregunta.
+            const questionTitle = document.createElement('div');
+            questionTitle.className = 'question-title';
+            questionTitle.textContent = `${currentQuestionIndex + 1}) ${currentQuestion.question}`;
+            card.appendChild(questionTitle);
+            
+            // Opciones de respuesta.
+            currentQuestion.options.forEach(optionText => {
+                const option = document.createElement('div');
+                option.className = 'option';
+                option.textContent = optionText;
+                
+                // Si la pregunta ya fue respondida, deshabilitar clics y mostrar la justificación.
+                if (answeredQuestions.has(currentQuestionIndex)) {
+                    option.style.pointerEvents = 'none';
+                    if (optionText === currentQuestion.correctAnswer) {
+                        option.classList.add('correct');
+                    }
+                    if (optionText !== currentQuestion.correctAnswer) {
+                        option.classList.add('incorrect');
+                    }
+                } else {
+                    option.addEventListener('click', () => handleOptionClick(option, optionText, currentQuestion.correctAnswer));
+                }
+                card.appendChild(option);
+            });
+            
+            // Justificación de la respuesta.
+            const justification = document.createElement('div');
+            justification.className = 'explanation';
+            justification.textContent = `JUSTIFICACIÓN: ${currentQuestion.justification}`;
+            if (answeredQuestions.has(currentQuestionIndex)) {
+                 justification.classList.add('visible');
+            }
+            card.appendChild(justification);
+            
+            // Añadir la tarjeta al contenedor principal.
+            quizContainer.appendChild(card);
+            updateNavButtons();
+        }
+
+        // Manejar el clic en una opción.
+        function handleOptionClick(selectedOption, selectedText, correctAnswer) {
+            // Marcar la pregunta como respondida.
+            answeredQuestions.add(currentQuestionIndex);
+
+            // Sumar a los contadores.
+            if (selectedText === correctAnswer) {
+                correctAnswers++;
+                selectedOption.classList.add('correct');
+            } else {
+                incorrectAnswers++;
+                selectedOption.classList.add('incorrect');
+            }
+            
+            // Obtener todas las opciones de la pregunta actual.
+            const options = quizContainer.querySelectorAll('.option');
+            
+            // Deshabilitar todas las opciones para evitar múltiples clics.
+            options.forEach(option => {
+                option.style.pointerEvents = 'none';
+                if (option.textContent === correctAnswer) {
+                    option.classList.add('correct');
+                }
+            });
+
+            // Mostrar la justificación.
+            const explanation = quizContainer.querySelector('.explanation');
+            explanation.classList.add('visible');
+        }
+
+        // Función para mostrar los resultados al final del test.
+        function showResults() {
+            quizContainer.innerHTML = `
+                <div class="card text-center">
+                    <h2 class="text-2xl font-bold mb-4">¡Test finalizado!</h2>
+                    <p class="text-lg">Respuestas correctas: <span class="font-semibold text-green-600">${correctAnswers}</span></p>
+                    <p class="text-lg">Respuestas incorrectas: <span class="font-semibold text-red-600">${incorrectAnswers}</span></p>
+                    <p class="text-lg mt-4">Total de preguntas: <span class="font-semibold">${questions.length}</span></p>
+                </div>
+            `;
+            // Ocultar botones de navegación al mostrar resultados.
+            prevBtn.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+            // Mostrar botón de reinicio.
+            restartBtn.classList.remove('hidden');
+        }
+
+        // Actualizar el estado de los botones de navegación.
+        function updateNavButtons() {
+            prevBtn.classList.toggle('disabled', currentQuestionIndex === 0);
+            nextBtn.textContent = currentQuestionIndex === questions.length - 1 ? 'Finalizar' : 'Siguiente';
+        }
+
+        // Función para reiniciar el quiz.
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            correctAnswers = 0;
+            incorrectAnswers = 0;
+            answeredQuestions.clear();
+            prevBtn.classList.remove('hidden');
+            nextBtn.classList.remove('hidden');
+            restartBtn.classList.add('hidden');
+            renderQuestion();
+        }
+
+        // Navegación entre preguntas.
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestion();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < questions.length) {
+                currentQuestionIndex++;
+                renderQuestion();
+            }
+        });
+
+        // Event listener para el botón de reiniciar.
+        restartBtn.addEventListener('click', restartQuiz);
+
+        // Cargar la primera pregunta al inicio.
+        document.addEventListener('DOMContentLoaded', renderQuestion);
+    </script>
+</body>
+</html>

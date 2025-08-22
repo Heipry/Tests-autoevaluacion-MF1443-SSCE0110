@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test MF1443</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .question-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #111827;
+        }
+        .option {
+            background-color: #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        .option:hover:not(.correct):not(.incorrect) {
+            background-color: #d1d5db;
+            transform: translateY(-2px);
+        }
+        .option.correct {
+            background-color: #dcfce7;
+            border: 2px solid #22c55e;
+            pointer-events: none;
+        }
+        .option.incorrect {
+            background-color: #fee2e2;
+            border: 2px solid #ef4444;
+            pointer-events: none;
+        }
+        .explanation {
+            background-color: #f9fafb;
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 0.5rem;
+            display: none;
+        }
+        .explanation.visible {
+            display: block;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+        }
+        .button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .button-primary {
+            background-color: #3b82f6;
+            color: #ffffff;
+        }
+        .button-primary:hover {
+            background-color: #2563eb;
+        }
+        .button-secondary {
+            background-color: #e5e7eb;
+            color: #1f2937;
+        }
+        .button-secondary:hover {
+            background-color: #d1d5db;
+        }
+        .disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8 flex items-center justify-center min-h-screen">
+    <div class="container bg-white rounded-xl shadow-lg p-6 md:p-10">
+        <h1 class="text-3xl font-bold text-center mb-6">Test de Evaluación MF1443 - Unidad 4</h1>
+        <div id="quiz-container"></div>
+        <div class="nav-buttons flex justify-between mt-6">
+            <button id="prev-btn" class="button button-secondary disabled">Anterior</button>
+            <button id="next-btn" class="button button-primary">Siguiente</button>
+             <!-- Nuevo botón para reiniciar el test -->
+            <button id="restart-btn" class="button button-primary hidden">Volver a empezar</button>
+        </div>
+    </div>
+
+    <script>
+        // Array de objetos con las preguntas, opciones, respuesta correcta y justificación.
+        const questions = [
+            {
+                question: '¿Qué es el protocolo TCP/IP?:',
+                options: [
+                    'a) Es el equivalente a una plataforma de teleformación pero los tutores no pueden subir información en ella.',
+                    'b) Es el que permite que se envíe y reciba la información a través de la red.',
+                    'c) Es un nuevo medio de comunicación que logró romper las barreras físicas entre regiones remotas.',
+                    'd) Es el protocolo (conjunto de reglas) de transferencia de la información.'
+                ],
+                correctAnswer: 'b) Es el que permite que se envíe y reciba la información a través de la red.',
+                justification: 'Unido al término Internet, nos encontramos con el protocolo TCP/IP que es el que permite que se envíe y reciba la información a través de la red.'
+            },
+            {
+                question: '¿Qué es una URL?:',
+                options: [
+                    'a) Son las siglas de lo que se denomina World Wide Web (1989) e identifican el sistema de intercambio de información multimedia por el que se puede acceder a los contenidos desde cualquier lugar del mundo con una conexión a Internet.',
+                    'b) Es el protocolo (conjunto de reglas) de transferencia de la información.',
+                    'c) Son las siglas de HyperText Markup Language («lenguaje de marcas de hipertexto») y hace referencia al lenguaje de marcado para la elaboración de páginas web.',
+                    'd) Es la información que nos permitirá especificar la localización precisa, sencilla y homogénea de los documentos servidos por la WWW.'
+                ],
+                correctAnswer: 'd) Es la información que nos permitirá especificar la localización precisa, sencilla y homogénea de los documentos servidos por la WWW.',
+                justification: 'URL es la información que, a continuación, de http veremos escrita en la barra de direcciones de nuestro navegador, y que nos permitirá especificar la localización precisa, sencilla y homogénea de los documentos servidos por la WWW.'
+            },
+            {
+                question: '¿Qué es una dirección IP?:',
+                options: [
+                    'a) Es un tipo de software instalado en nuestro ordenador que nos permite acceder a Internet.',
+                    'b) Es la guía de teléfonos de la Web.',
+                    'c) Es una serie de números que indica al ordenador dónde encontrar la información que buscamos. Una dirección IP es como un número de teléfono.',
+                    'd) Es la llamada "Nube". Esto significa que toda la información que buscamos se almacena en servidores ubicados en lugares diferentes de países de todo el mundo.'
+                ],
+                correctAnswer: 'c) Es una serie de números que indica al ordenador dónde encontrar la información que buscamos. Una dirección IP es como un número de teléfono.',
+                justification: 'Es una serie de números que indica al ordenador dónde encontrar la información que buscamos. Una dirección IP es como un número de teléfono. Las URL se crearon porque las direcciones IP eran muy complejas y difíciles de recordar. Por ejemplo: En lugar de introducir una dirección IP (45.732.34.353) para acceder al sitio web de Google, lo único que tenemos que escribir es la URL (www.google.com).'
+            },
+            {
+                question: '¿Cuál de las siguientes es una característica de los foros?:',
+                options: [
+                    'a) Por lo general aparecen como complemento a un sitio web, invitando a los usuarios/as a discutir o compartir información relevante sobre la temática del sitio.',
+                    'b) Los textos que configuran las entradas suelen incluir diferentes palabras señaladas sobre las cuales se puede clicar para llegar a otra página o referencia.',
+                    'c) Es habitual que incluyan fotos, vídeos y grabaciones de audio que favorecen la comprensión.',
+                    'd) Son unas listas que elaboraremos para conseguir la distribución masiva de información entre múltiples usuarios de Internet en simultáneo.'
+                ],
+                correctAnswer: 'a) Por lo general aparecen como complemento a un sitio web, invitando a los usuarios/as a discutir o compartir información relevante sobre la temática del sitio.',
+                justification: 'Los foros son discusiones en línea. Por lo general aparecen como complemento a un sitio web, invitando a los usuarios/as a discutir o compartir información relevante sobre la temática del sitio, en discusión libre e informal, con lo cual se llega a formar una comunidad en torno a un interés común.'
+            },
+            {
+                question: '¿Cuál de las siguientes es una característica de las wikis?:',
+                options: [
+                    'a) Brindan la oportunidad de añadir comentarios de otras personas a las noticas que van apareciendo, lo que favorece el intercambio de opiniones y mejora las aportaciones.',
+                    'b) Es habitual que incluyan fotos, vídeos y grabaciones de audio que favorecen la comprensión.',
+                    'c) Permiten a las personas cambiar, incorporar o eliminar información sin tener que manejar un lenguaje de programación.',
+                    'd) Son unas listas que elaboraremos para conseguir la distribución masiva de información entre múltiples usuarios de Internet en simultáneo.'
+                ],
+                correctAnswer: 'c) Permiten a las personas cambiar, incorporar o eliminar información sin tener que manejar un lenguaje de programación.',
+                justification: 'Las características más relevantes de las wikis son: Las wikis permiten a las personas cambiar, incorporar o eliminar información sin tener que manejar un lenguaje de programación. Las páginas wiki pueden ser habilitadas para que cualquier usuario/a pueda acceder para modificar el contenido editado o para que sólo puedan hacerlo los que tienen permiso. Todos los cambios quedan registrados y esto nos permitirá realizar un seguimiento o la restauración de ediciones previas si las aportaciones no son las deseadas. Desde el punto de vista de la formación, las wikis potencian la actualización de los conocimientos ya que siempre puede haber alguna información nueva que añadir a la vez que permiten la realización de proyectos de colaboración entre todos los participantes.'
+            },
+            {
+                question: '¿Qué es un podcast?:',
+                options: [
+                    'a) Es una colección de materiales puestos a disposición para compartir por los usuarios en plataformas que permiten alojar, etiquetar, votar y comentar esos materiales.',
+                    'b) Es un archivo de sonido o vídeo que se distribuye mediante un sistema de sindicación que permite suscribirse y usar un programa que lo descarga de Internet para poder escucharlo cuando se desee en un reproductor portátil.',
+                    'c) Son sitios donde guardar archivos de diverso formato cuyo requisito previo para usarlos consiste en crear una cuenta mediante un nombre de usuario y una contraseña.',
+                    'd) Es una lista que elaboraremos para conseguir la distribución masiva de información entre múltiples usuarios de Internet en simultáneo.'
+                ],
+                correctAnswer: 'b) Es un archivo de sonido o vídeo que se distribuye mediante un sistema de sindicación que permite suscribirse y usar un programa que lo descarga de Internet para poder escucharlo cuando se desee en un reproductor portátil.',
+                justification: 'Un podcast es un archivo de sonido o vídeo que se distribuye mediante un sistema de sindicación que permite suscribirse y usar un programa que lo descarga de Internet para poder escucharlo cuando se desee en un reproductor portátil". Para crear un podcast, necesitamos un programa de edición de sonido.'
+            },
+            {
+                question: '¿Cuál de las siguientes es una utilidad de los blogs en formación?:',
+                options: [
+                    'a) Sirve como biblioteca o base de datos en torno a casos o temas concretos.',
+                    'b) Es una herramienta muy adecuada para la creación de tutoriales.',
+                    'c) Sirve para explicar una actividad por parte del profesorado.',
+                    'd) Sirve como almacenaje de trabajos de los alumnos/as, ensayos o comentarios que permiten el seguimiento de su progreso.'
+                ],
+                correctAnswer: 'd) Sirve como almacenaje de trabajos de los alumnos/as, ensayos o comentarios que permiten el seguimiento de su progreso.',
+                justification: 'Las diferentes utilidades de los blogs en formación son las siguientes: Describir eventos y cursos, temas o lecciones, ofreciendo información sobre tareas, recursos y bibliografía. Espacio para la cooperación entre los estudiantes sobre un mismo proyecto o tarea. Almacenaje de trabajos de los alumnos/as, ensayos o comentarios que permiten el seguimiento de su progreso. Realizar comentarios sobre lecturas sugeridas.'
+            },
+            {
+                question: '¿Qué es un portfolio?:',
+                options: [
+                    'a) Es un espacio para la cooperación entre los estudiantes sobre un mismo proyecto o tarea.',
+                    'b) Es una colección de los trabajos que realiza a lo largo del curso una persona participante en formación.',
+                    'c) Es una herramienta muy adecuada para la creación de tutoriales.',
+                    'd) Es una lista que elaboraremos para conseguir la distribución masiva de información entre múltiples usuarios de Internet en simultáneo.'
+                ],
+                correctAnswer: 'b) Es una colección de los trabajos que realiza a lo largo del curso una persona participante en formación.',
+                justification: 'El port-folio es una colección de los trabajos que realiza a lo largo del curso una persona participante en formación. Con el asesoramiento del profesor/a o tutor/a, va recopilando y evidenciando sus esfuerzos, sus fortalezas y debilidades, sus talentos, sus destrezas, sus logros y producciones.'
+            },
+            {
+                question: '¿Qué es un software de dominio público?:',
+                options: [
+                    'a) Se trata de software libre cuyos términos de distribución no permiten a los redistribuidores agregar ninguna restricción adicional cuando lo redistribuyen o modifican.',
+                    'b) Es aquel que no es libre, pero viene con autorización de uso, copia, distribución y modificación para particulares sin fines de lucro.',
+                    'c) Se trata de software con autorización de redistribución de copias, pero debemos pagar cargo por licencia de uso continuado.',
+                    'd) Es aquel que no está protegido con copyright.'
+                ],
+                correctAnswer: 'd) Es aquel que no está protegido con copyright.',
+                justification: 'Entre las licencias de programas encontramos el software de dominio público que es aquel que no está protegido con copyright.'
+            },
+            {
+                question: '¿Qué es un software comercial?:',
+                options: [
+                    'a) La selección de contenidos se hará partiendo del perfil profesional de la ocupación.',
+                    'b) Aquel que está desarrollado por una empresa que gana dinero con su uso.',
+                    'c) Contiene información básica sobre qué enseñar, en cuantas unidades organizarlo y qué va a contener cada una de ellas.',
+                    'd) Es una de las herramientas que puede ayudar a distribuir bien los tiempos de nuestras sesiones formativas.'
+                ],
+                correctAnswer: 'b) Aquel que está desarrollado por una empresa que gana dinero con su uso.',
+                justification: 'Entre las licencias de programas encontramos el software comercial que es aquel que está desarrollado por una empresa que gana dinero con su uso.'
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let correctAnswers = 0;
+        let incorrectAnswers = 0;
+        let answeredQuestions = new Set();
+        const quizContainer = document.getElementById('quiz-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const restartBtn = document.getElementById('restart-btn');
+
+        // Función para renderizar la pregunta actual.
+        function renderQuestion() {
+            // Limpiar el contenedor del quiz.
+            quizContainer.innerHTML = '';
+            
+            // Si hemos llegado al final del test, mostramos los resultados.
+            if (currentQuestionIndex >= questions.length) {
+                showResults();
+                return;
+            }
+
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            // Crear la tarjeta de la pregunta.
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            // Título de la pregunta.
+            const questionTitle = document.createElement('div');
+            questionTitle.className = 'question-title';
+            questionTitle.textContent = `${currentQuestionIndex + 1}) ${currentQuestion.question}`;
+            card.appendChild(questionTitle);
+            
+            // Opciones de respuesta.
+            currentQuestion.options.forEach(optionText => {
+                const option = document.createElement('div');
+                option.className = 'option';
+                option.textContent = optionText;
+                
+                // Si la pregunta ya fue respondida, deshabilitar clics y mostrar la justificación.
+                if (answeredQuestions.has(currentQuestionIndex)) {
+                    option.style.pointerEvents = 'none';
+                    if (optionText === currentQuestion.correctAnswer) {
+                        option.classList.add('correct');
+                    }
+                    if (optionText !== currentQuestion.correctAnswer) {
+                        option.classList.add('incorrect');
+                    }
+                } else {
+                    option.addEventListener('click', () => handleOptionClick(option, optionText, currentQuestion.correctAnswer));
+                }
+                card.appendChild(option);
+            });
+            
+            // Justificación de la respuesta.
+            const justification = document.createElement('div');
+            justification.className = 'explanation';
+            justification.textContent = `JUSTIFICACIÓN: ${currentQuestion.justification}`;
+            if (answeredQuestions.has(currentQuestionIndex)) {
+                 justification.classList.add('visible');
+            }
+            card.appendChild(justification);
+            
+            // Añadir la tarjeta al contenedor principal.
+            quizContainer.appendChild(card);
+            updateNavButtons();
+        }
+
+        // Manejar el clic en una opción.
+        function handleOptionClick(selectedOption, selectedText, correctAnswer) {
+            // Marcar la pregunta como respondida.
+            answeredQuestions.add(currentQuestionIndex);
+
+            // Sumar a los contadores.
+            if (selectedText === correctAnswer) {
+                correctAnswers++;
+                selectedOption.classList.add('correct');
+            } else {
+                incorrectAnswers++;
+                selectedOption.classList.add('incorrect');
+            }
+            
+            // Obtener todas las opciones de la pregunta actual.
+            const options = quizContainer.querySelectorAll('.option');
+            
+            // Deshabilitar todas las opciones para evitar múltiples clics.
+            options.forEach(option => {
+                option.style.pointerEvents = 'none';
+                if (option.textContent === correctAnswer) {
+                    option.classList.add('correct');
+                }
+            });
+
+            // Mostrar la justificación.
+            const explanation = quizContainer.querySelector('.explanation');
+            explanation.classList.add('visible');
+        }
+
+        // Función para mostrar los resultados al final del test.
+        function showResults() {
+            quizContainer.innerHTML = `
+                <div class="card text-center">
+                    <h2 class="text-2xl font-bold mb-4">¡Test finalizado!</h2>
+                    <p class="text-lg">Respuestas correctas: <span class="font-semibold text-green-600">${correctAnswers}</span></p>
+                    <p class="text-lg">Respuestas incorrectas: <span class="font-semibold text-red-600">${incorrectAnswers}</span></p>
+                    <p class="text-lg mt-4">Total de preguntas: <span class="font-semibold">${questions.length}</span></p>
+                </div>
+            `;
+            // Ocultar botones de navegación al mostrar resultados.
+            prevBtn.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+            // Mostrar botón de reinicio.
+            restartBtn.classList.remove('hidden');
+        }
+
+        // Actualizar el estado de los botones de navegación.
+        function updateNavButtons() {
+            prevBtn.classList.toggle('disabled', currentQuestionIndex === 0);
+            nextBtn.textContent = currentQuestionIndex === questions.length - 1 ? 'Finalizar' : 'Siguiente';
+        }
+
+        // Función para reiniciar el quiz.
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            correctAnswers = 0;
+            incorrectAnswers = 0;
+            answeredQuestions.clear();
+            prevBtn.classList.remove('hidden');
+            nextBtn.classList.remove('hidden');
+            restartBtn.classList.add('hidden');
+            renderQuestion();
+        }
+
+        // Navegación entre preguntas.
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestion();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < questions.length) {
+                currentQuestionIndex++;
+                renderQuestion();
+            }
+        });
+
+        // Event listener para el botón de reiniciar.
+        restartBtn.addEventListener('click', restartQuiz);
+
+        // Cargar la primera pregunta al inicio.
+        document.addEventListener('DOMContentLoaded', renderQuestion);
+    </script>
+</body>
+</html>
